@@ -2,8 +2,20 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './JsonViewer.module.css';
 
+interface JsonValue {
+    [key: string]: JsonValueType;
+}
+
+type JsonValueType =
+    | string
+    | number
+    | boolean
+    | null
+    | JsonValue
+    | JsonValueType[];
+
 interface JsonViewerProps {
-    data: any;
+    data: JsonValueType;
     initialExpanded?: boolean;
     searchTerm?: string;
     path?: string[];
@@ -21,7 +33,7 @@ const JsonView = ({
     const [isExpanded, setIsExpanded] = useState(initialExpanded);
     const nodeRef = useRef<HTMLDivElement>(null);
 
-    const getType = (value: any): string => {
+    const getType = (value: JsonValueType): string => {
         if (value === null) return 'null';
         if (Array.isArray(value)) return 'array';
         return typeof value;
@@ -34,7 +46,7 @@ const JsonView = ({
     const type = getType(data);
 
     // Check if current node or its children contain the search term
-    const containsSearchTerm = (value: any, currentPath: string[] = []): boolean => {
+    const containsSearchTerm = (value: JsonValueType, currentPath: string[] = []): boolean => {
         if (!searchTerm || searchTerm.trim() === '') return false;
 
         const stringValue = String(value);
@@ -53,7 +65,7 @@ const JsonView = ({
 
         // For arrays and objects, check children
         if (typeof value === 'object') {
-            for (const [key, childValue] of Object.entries(value)) {
+            for (const [key, childValue] of Object.entries(value as JsonValue)) {
                 const childPath = [...currentPath, key];
                 const childPathStr = childPath.join('.');
 
@@ -97,7 +109,7 @@ const JsonView = ({
                 nodeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }, [searchTerm, path, data]);
+    }, [searchTerm, path, data, initialExpanded, isExpanded, searchResults, containsSearchTerm]);
 
     // Highlight text that matches the search term
     const highlightText = (text: string) => {
@@ -120,7 +132,7 @@ const JsonView = ({
                 ref={nodeRef}
                 className={`${styles.string} ${isMatch ? styles.matchNode : ''}`}
             >
-        "{highlightText(data)}"
+        &quot;{highlightText(data as string)}&quot;
       </span>
         );
     }
@@ -173,7 +185,9 @@ const JsonView = ({
 
     // For objects and arrays
     const isArray = type === 'array';
-    const isEmpty = isArray ? data.length === 0 : Object.keys(data).length === 0;
+    const isEmpty = isArray
+        ? (data as JsonValueType[]).length === 0
+        : Object.keys(data as JsonValue).length === 0;
     const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
 
     return (
@@ -195,8 +209,8 @@ const JsonView = ({
             {isEmpty
                 ? ''
                 : isArray
-                    ? `${data.length} ${data.length === 1 ? 'item' : 'items'}`
-                    : `${Object.keys(data).length} ${Object.keys(data).length === 1 ? 'property' : 'properties'}`
+                    ? `${(data as JsonValueType[]).length} ${(data as JsonValueType[]).length === 1 ? 'item' : 'items'}`
+                    : `${Object.keys(data as JsonValue).length} ${Object.keys(data as JsonValue).length === 1 ? 'property' : 'properties'}`
             }
           </span>
                 )}
@@ -212,7 +226,7 @@ const JsonView = ({
                         <>
                             <div className={styles.properties}>
                                 {isArray
-                                    ? data.map((item: any, index: number) => (
+                                    ? (data as JsonValueType[]).map((item, index) => (
                                         <div key={index} className={styles.property}>
                                             <span className={styles.key}>{index}: </span>
                                             <JsonView
@@ -221,10 +235,10 @@ const JsonView = ({
                                                 path={[...path, String(index)]}
                                                 searchResults={searchResults}
                                             />
-                                            {index < data.length - 1 && <span className={styles.comma}>,</span>}
+                                            {index < (data as JsonValueType[]).length - 1 && <span className={styles.comma}>,</span>}
                                         </div>
                                     ))
-                                    : Object.entries(data).map(([key, value], index, array) => {
+                                    : Object.entries(data as JsonValue).map(([key, value], index, array) => {
                                         const keyHasMatch = searchTerm &&
                                             searchTerm.trim() !== '' &&
                                             key.toLowerCase().includes(searchTerm.toLowerCase());
@@ -232,7 +246,7 @@ const JsonView = ({
                                         return (
                                             <div key={key} className={styles.property}>
                           <span className={`${styles.key} ${keyHasMatch ? styles.highlight : ''}`}>
-                            "{highlightText(key)}":
+                            &quot;{highlightText(key)}&quot;:
                           </span>
                                                 <JsonView
                                                     data={value}
@@ -259,7 +273,7 @@ const JsonView = ({
 
 export default function Home() {
     const [jsonInput, setJsonInput] = useState('');
-    const [jsonData, setJsonData] = useState<any>(null);
+    const [jsonData, setJsonData] = useState<JsonValueType | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState(new Set<string>());
@@ -298,7 +312,7 @@ export default function Home() {
             }
 
             try {
-                const parsed = JSON.parse(jsonInput);
+                const parsed = JSON.parse(jsonInput) as JsonValueType;
                 setJsonData(parsed);
                 setError(null);
             } catch (err) {
@@ -322,7 +336,7 @@ export default function Home() {
         const results = new Set<string>();
 
         // Helper function to search through all nodes
-        const searchInObject = (obj: any, path: string[] = []) => {
+        const searchInObject = (obj: JsonValueType, path: string[] = []): boolean => {
             if (obj === null || typeof obj !== 'object') {
                 const stringValue = String(obj);
                 if (stringValue.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -334,7 +348,7 @@ export default function Home() {
 
             let hasMatch = false;
 
-            for (const [key, value] of Object.entries(obj)) {
+            for (const [key, value] of Object.entries(obj as JsonValue)) {
                 const newPath = [...path, key];
                 const currentPathStr = newPath.join('.');
 
