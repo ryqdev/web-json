@@ -1,15 +1,25 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './JsonViewer.module.css';
 
 interface JsonViewerProps {
     data: any;
     initialExpanded?: boolean;
+    searchTerm?: string;
+    path?: string[];
+    searchResults?: Set<string>;
 }
 
 // JsonView component for displaying a single JSON node
-const JsonView = ({ data, initialExpanded = false }: JsonViewerProps) => {
+const JsonView = ({
+                      data,
+                      initialExpanded = false,
+                      searchTerm = '',
+                      path = [],
+                      searchResults = new Set()
+                  }: JsonViewerProps) => {
     const [isExpanded, setIsExpanded] = useState(initialExpanded);
+    const nodeRef = useRef<HTMLDivElement>(null);
 
     const getType = (value: any): string => {
         if (value === null) return 'null';
@@ -23,30 +33,158 @@ const JsonView = ({ data, initialExpanded = false }: JsonViewerProps) => {
 
     const type = getType(data);
 
-    // Primitive types rendering
+    // Check if current node or its children contain the search term
+    const containsSearchTerm = (value: any, currentPath: string[] = []): boolean => {
+        if (!searchTerm || searchTerm.trim() === '') return false;
+
+        const stringValue = String(value);
+        const currentPathStr = currentPath.join('.');
+
+        // Check current value
+        if (typeof value !== 'object' && stringValue.toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.add(currentPathStr);
+            return true;
+        }
+
+        // For null
+        if (value === null) {
+            return false;
+        }
+
+        // For arrays and objects, check children
+        if (typeof value === 'object') {
+            for (const [key, childValue] of Object.entries(value)) {
+                const childPath = [...currentPath, key];
+                const childPathStr = childPath.join('.');
+
+                // Check if the key contains the search term
+                if (searchTerm.trim() !== '' && key.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    searchResults.add(childPathStr);
+                }
+
+                // Recursively check child values
+                if (containsSearchTerm(childValue, childPath)) {
+                    searchResults.add(currentPathStr); // Mark parent as containing a match too
+                }
+            }
+
+            return searchResults.has(currentPathStr);
+        }
+
+        return false;
+    };
+
+    // Auto-expand if this node or its children contain the search term
+    useEffect(() => {
+        const currentPath = path.join('.');
+
+        // If search term is empty, don't alter expand state unless it's initial
+        if (!searchTerm || searchTerm.trim() === '') {
+            if (!initialExpanded && !isExpanded) {
+                return; // Don't collapse if it was manually expanded
+            }
+            return;
+        }
+
+        // Clear the marking to recompute
+        const shouldExpand = searchResults.has(currentPath) || containsSearchTerm(data, path);
+
+        if (shouldExpand) {
+            setIsExpanded(true);
+
+            // Scroll the node into view if it's a direct match
+            if (nodeRef.current && searchResults.has(currentPath)) {
+                nodeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [searchTerm, path, data]);
+
+    // Highlight text that matches the search term
+    const highlightText = (text: string) => {
+        if (!searchTerm || searchTerm.trim() === '') return text;
+
+        const parts = text.split(new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+
+        return parts.map((part, index) =>
+            part.toLowerCase() === searchTerm.toLowerCase() ?
+                <mark key={index} className={styles.highlight}>{part}</mark> :
+                part
+        );
+    };
+
+    // Primitive types rendering with highlighting
     if (type === 'string') {
-        return <span className={styles.string}>"{data}"</span>;
+        const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
+        return (
+            <span
+                ref={nodeRef}
+                className={`${styles.string} ${isMatch ? styles.matchNode : ''}`}
+            >
+        "{highlightText(data)}"
+      </span>
+        );
     }
     if (type === 'number') {
-        return <span className={styles.number}>{data}</span>;
+        const stringValue = String(data);
+        const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
+        return (
+            <span
+                ref={nodeRef}
+                className={`${styles.number} ${isMatch ? styles.matchNode : ''}`}
+            >
+        {highlightText(stringValue)}
+      </span>
+        );
     }
     if (type === 'boolean') {
-        return <span className={styles.boolean}>{data ? 'true' : 'false'}</span>;
+        const stringValue = data ? 'true' : 'false';
+        const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
+        return (
+            <span
+                ref={nodeRef}
+                className={`${styles.boolean} ${isMatch ? styles.matchNode : ''}`}
+            >
+        {highlightText(stringValue)}
+      </span>
+        );
     }
     if (type === 'null') {
-        return <span className={styles.null}>null</span>;
+        const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
+        return (
+            <span
+                ref={nodeRef}
+                className={`${styles.null} ${isMatch ? styles.matchNode : ''}`}
+            >
+        null
+      </span>
+        );
     }
     if (type === 'undefined') {
-        return <span className={styles.null}>undefined</span>;
+        const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
+        return (
+            <span
+                ref={nodeRef}
+                className={`${styles.null} ${isMatch ? styles.matchNode : ''}`}
+            >
+        undefined
+      </span>
+        );
     }
 
     // For objects and arrays
     const isArray = type === 'array';
     const isEmpty = isArray ? data.length === 0 : Object.keys(data).length === 0;
+    const isMatch = searchTerm && searchTerm.trim() !== '' && searchResults.has(path.join('.'));
 
     return (
-        <div className={styles.jsonNode}>
-            <div className={styles.toggler} onClick={toggleExpand}>
+        <div
+            ref={nodeRef}
+            className={`${styles.jsonNode} ${isMatch ? styles.matchContainer : ''}`}
+        >
+            <div
+                className={`${styles.toggler} ${isMatch ? styles.matchNode : ''}`}
+                onClick={toggleExpand}
+            >
                 <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
                 <span className={styles.bracket}>
           {isArray ? '[' : '{'}
@@ -77,17 +215,35 @@ const JsonView = ({ data, initialExpanded = false }: JsonViewerProps) => {
                                     ? data.map((item: any, index: number) => (
                                         <div key={index} className={styles.property}>
                                             <span className={styles.key}>{index}: </span>
-                                            <JsonView data={item} />
+                                            <JsonView
+                                                data={item}
+                                                searchTerm={searchTerm}
+                                                path={[...path, String(index)]}
+                                                searchResults={searchResults}
+                                            />
                                             {index < data.length - 1 && <span className={styles.comma}>,</span>}
                                         </div>
                                     ))
-                                    : Object.entries(data).map(([key, value], index, array) => (
-                                        <div key={key} className={styles.property}>
-                                            <span className={styles.key}>"{key}": </span>
-                                            <JsonView data={value} />
-                                            {index < array.length - 1 && <span className={styles.comma}>,</span>}
-                                        </div>
-                                    ))
+                                    : Object.entries(data).map(([key, value], index, array) => {
+                                        const keyHasMatch = searchTerm &&
+                                            searchTerm.trim() !== '' &&
+                                            key.toLowerCase().includes(searchTerm.toLowerCase());
+
+                                        return (
+                                            <div key={key} className={styles.property}>
+                          <span className={`${styles.key} ${keyHasMatch ? styles.highlight : ''}`}>
+                            "{highlightText(key)}":
+                          </span>
+                                                <JsonView
+                                                    data={value}
+                                                    searchTerm={searchTerm}
+                                                    path={[...path, key]}
+                                                    searchResults={searchResults}
+                                                />
+                                                {index < array.length - 1 && <span className={styles.comma}>,</span>}
+                                            </div>
+                                        );
+                                    })
                                 }
                             </div>
                             <div className={styles.closingBracket}>
@@ -105,17 +261,29 @@ export default function Home() {
     const [jsonInput, setJsonInput] = useState('');
     const [jsonData, setJsonData] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState(new Set<string>());
+    const [resultCount, setResultCount] = useState(0);
 
     // Example JSON for initial placeholder
     const exampleJson = JSON.stringify({
         name: "JSON Viewer",
         version: 1.0,
-        features: ["folding", "syntax highlighting", "responsive"],
+        features: ["folding", "syntax highlighting", "responsive", "search"],
         isAwesome: true,
         author: {
             name: "Developer",
             contact: {
                 email: "dev@example.com"
+            }
+        },
+        nestedData: {
+            level1: {
+                level2: {
+                    level3: {
+                        deepValue: "This is deeply nested data that would normally be hidden"
+                    }
+                }
             }
         }
     }, null, 2);
@@ -142,6 +310,59 @@ export default function Home() {
         return () => clearTimeout(debounceTimeout);
     }, [jsonInput]);
 
+    // Update search results when search term or JSON data changes
+    useEffect(() => {
+        // Reset search results when search term is empty
+        if (!searchTerm || searchTerm.trim() === '' || !jsonData) {
+            setSearchResults(new Set());
+            setResultCount(0);
+            return;
+        }
+
+        const results = new Set<string>();
+
+        // Helper function to search through all nodes
+        const searchInObject = (obj: any, path: string[] = []) => {
+            if (obj === null || typeof obj !== 'object') {
+                const stringValue = String(obj);
+                if (stringValue.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    results.add(path.join('.'));
+                    return true;
+                }
+                return false;
+            }
+
+            let hasMatch = false;
+
+            for (const [key, value] of Object.entries(obj)) {
+                const newPath = [...path, key];
+                const currentPathStr = newPath.join('.');
+
+                // Check if key matches
+                if (key.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    results.add(currentPathStr);
+                    hasMatch = true;
+                }
+
+                // Check if value matches (recursively for objects)
+                const valueMatches = searchInObject(value, newPath);
+                if (valueMatches) {
+                    hasMatch = true;
+                    // Mark parent paths as having matches too
+                    if (path.length > 0) {
+                        results.add(path.join('.'));
+                    }
+                }
+            }
+
+            return hasMatch;
+        };
+
+        searchInObject(jsonData);
+        setSearchResults(results);
+        setResultCount(results.size);
+    }, [searchTerm, jsonData]);
+
     return (
         <div className={styles.page}>
             <h1 className={styles.title}>JSON Viewer</h1>
@@ -165,11 +386,35 @@ export default function Home() {
                 </div>
 
                 <div className={styles.rightPanel}>
-                    <h2 className={styles.panelTitle}>JSON Viewer</h2>
+                    <div className={styles.viewerHeader}>
+                        <h2 className={styles.panelTitle}>JSON Viewer</h2>
+                        {jsonData && (
+                            <div className={styles.searchContainer}>
+                                <input
+                                    type="text"
+                                    className={styles.searchInput}
+                                    placeholder="Search in JSON..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                {searchTerm && searchTerm.trim() !== '' && (
+                                    <div className={styles.searchStats}>
+                                        {resultCount} match{resultCount !== 1 ? 'es' : ''}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {jsonData ? (
                         <div className={styles.container}>
                             <div className={styles.jsonViewer}>
-                                <JsonView data={jsonData} initialExpanded={true} />
+                                <JsonView
+                                    data={jsonData}
+                                    initialExpanded={true}
+                                    searchTerm={searchTerm}
+                                    searchResults={searchResults}
+                                />
                             </div>
                         </div>
                     ) : (
