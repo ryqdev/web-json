@@ -1,3 +1,65 @@
+/* JsonViewer.module.css */
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.title {
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+.inputContainer {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.jsonInput {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    resize: vertical;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button {
+    padding: 8px 16px;
+    background-color: #4a5568;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: #2d3748;
+}
+
+.error {
+    padding: 12px;
+    background-color: #fed7d7;
+    color: #9b2c2c;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-family: sans-serif;
+}
+
+/* JSON Viewer Styles */
 .container {
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     padding: 20px;
@@ -6,12 +68,7 @@
     border-radius: 8px;
     overflow: auto;
     max-width: 100%;
-    margin: 20px auto;
-}
-
-.title {
-    margin-bottom: 20px;
-    color: #e6e6e6;
+    margin: 20px 0;
 }
 
 .jsonViewer {
@@ -87,4 +144,19 @@
 
 .closingBracket {
     margin-top: 4px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .page {
+        padding: 10px;
+    }
+
+    .buttonGroup {
+        flex-direction: column;
+    }
+
+    .button {
+        width: 100%;
+    }
 }

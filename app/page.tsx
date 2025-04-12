@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './JsonViewer.module.css';
 
 interface JsonViewerProps {
@@ -102,8 +102,12 @@ const JsonView = ({ data, initialExpanded = false }: JsonViewerProps) => {
 };
 
 export default function Home() {
-    // Example JSON data
-    const jsonData = {
+    const [jsonInput, setJsonInput] = useState('');
+    const [jsonData, setJsonData] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Example JSON for initial placeholder
+    const exampleJson = JSON.stringify({
         name: "JSON Viewer",
         version: 1.0,
         features: ["folding", "syntax highlighting", "responsive"],
@@ -111,27 +115,86 @@ export default function Home() {
         author: {
             name: "Developer",
             contact: {
-                email: "dev@example.com",
-                website: "https://example.com"
+                email: "dev@example.com"
             }
-        },
-        examples: [
-            { id: 1, type: "simple" },
-            { id: 2, type: "complex", hasChildren: true },
-            null,
-            123,
-            "string value"
-        ],
-        emptyArray: [],
-        emptyObject: {}
+        }
+    }, null, 2);
+
+    // Parse JSON input
+    const parseJson = () => {
+        try {
+            if (!jsonInput.trim()) {
+                setError("Please enter some JSON data");
+                setJsonData(null);
+                return;
+            }
+            const parsed = JSON.parse(jsonInput);
+            setJsonData(parsed);
+            setError(null);
+        } catch (err) {
+            setError("Invalid JSON: " + (err as Error).message);
+            setJsonData(null);
+        }
+    };
+
+    // Format the JSON in the textarea
+    const formatJson = () => {
+        try {
+            if (!jsonInput.trim()) {
+                return;
+            }
+            const parsed = JSON.parse(jsonInput);
+            setJsonInput(JSON.stringify(parsed, null, 2));
+            setError(null);
+        } catch (err) {
+            setError("Invalid JSON: " + (err as Error).message);
+        }
+    };
+
+    // Clear the input
+    const clearJson = () => {
+        setJsonInput('');
+        setJsonData(null);
+        setError(null);
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.page}>
             <h1 className={styles.title}>JSON Viewer</h1>
-            <div className={styles.jsonViewer}>
-                <JsonView data={jsonData} initialExpanded={true} />
+
+            <div className={styles.inputContainer}>
+        <textarea
+            className={styles.jsonInput}
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder={`Enter your JSON here...\n\nExample:\n${exampleJson}`}
+            rows={10}
+        />
+
+                <div className={styles.buttonGroup}>
+                    <button className={styles.button} onClick={parseJson}>
+                        Parse JSON
+                    </button>
+                    <button className={styles.button} onClick={formatJson}>
+                        Format JSON
+                    </button>
+                    <button className={styles.button} onClick={clearJson}>
+                        Clear
+                    </button>
+                </div>
             </div>
+
+            {error && (
+                <div className={styles.error}>{error}</div>
+            )}
+
+            {jsonData && (
+                <div className={styles.container}>
+                    <div className={styles.jsonViewer}>
+                        <JsonView data={jsonData} initialExpanded={true} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
