@@ -111,13 +111,14 @@
     text-align: center;
 }
 
-/* JSON Viewer Styles */
+/* JSON Viewer Styles - Light Theme */
 .container {
     flex: 1;
     padding: 20px;
-    background-color: #282c34;
-    color: #abb2bf;
+    background-color: #ffffff;
+    color: #333333;
     overflow: auto;
+    border-radius: 0 0 8px 8px;
 }
 
 .jsonViewer {
@@ -142,12 +143,12 @@
     display: inline-block;
     margin-right: 6px;
     font-size: 10px;
-    color: #56b6c2;
+    color: #0077cc;
 }
 
 .content {
     margin-left: 20px;
-    border-left: 1px dashed #4b5263;
+    border-left: 1px dashed #ccc;
     padding-left: 10px;
 }
 
@@ -163,35 +164,35 @@
 }
 
 .key {
-    color: #e06c75; /* Pink */
+    color: #986801; /* Brown/amber color for keys */
 }
 
 .string {
-    color: #98c379; /* Green */
+    color: #50a14f; /* Green for strings */
 }
 
 .number {
-    color: #d19a66; /* Orange */
+    color: #e45649; /* Red-orange for numbers */
 }
 
 .boolean {
-    color: #56b6c2; /* Cyan */
+    color: #4078f2; /* Blue for booleans */
 }
 
 .null {
-    color: #c678dd; /* Purple */
+    color: #a626a4; /* Purple for null/undefined */
 }
 
 .bracket {
-    color: #abb2bf; /* Light gray */
+    color: #383a42; /* Dark grey for brackets */
 }
 
 .comma {
-    color: #abb2bf; /* Light gray */
+    color: #383a42; /* Dark grey for commas */
 }
 
 .preview {
-    color: #5c6370; /* Gray/comment color */
+    color: #a0a1a7; /* Light grey for preview text */
     font-style: italic;
     margin: 0 4px;
 }
@@ -202,20 +203,20 @@
 
 /* Highlight for search matches */
 .highlight {
-    background-color: #e9a048;
-    color: #282c34;
+    background-color: #ffdd95; /* Light yellow highlight */
+    color: #333;
     border-radius: 2px;
     padding: 0 2px;
     margin: 0 -2px;
 }
 
 .matchNode {
-    background-color: rgba(233, 160, 72, 0.15);
+    background-color: rgba(255, 221, 149, 0.3); /* Lighter yellow for matching container */
     border-radius: 3px;
 }
 
 .matchContainer {
-    border-left: 2px solid #e9a048;
+    border-left: 2px solid #ffb300; /* Amber border for match containers */
 }
 
 /* Responsive styles */
