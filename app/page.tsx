@@ -120,81 +120,69 @@ export default function Home() {
         }
     }, null, 2);
 
-    // Parse JSON input
-    const parseJson = () => {
-        try {
+    // Parse JSON automatically when input changes
+    useEffect(() => {
+        const debounceTimeout = setTimeout(() => {
             if (!jsonInput.trim()) {
-                setError("Please enter some JSON data");
                 setJsonData(null);
+                setError(null);
                 return;
             }
-            const parsed = JSON.parse(jsonInput);
-            setJsonData(parsed);
-            setError(null);
-        } catch (err) {
-            setError("Invalid JSON: " + (err as Error).message);
-            setJsonData(null);
-        }
-    };
 
-    // Format the JSON in the textarea
-    const formatJson = () => {
-        try {
-            if (!jsonInput.trim()) {
-                return;
+            try {
+                const parsed = JSON.parse(jsonInput);
+                setJsonData(parsed);
+                setError(null);
+            } catch (err) {
+                setError("Invalid JSON: " + (err as Error).message);
+                setJsonData(null);
             }
-            const parsed = JSON.parse(jsonInput);
-            setJsonInput(JSON.stringify(parsed, null, 2));
-            setError(null);
-        } catch (err) {
-            setError("Invalid JSON: " + (err as Error).message);
-        }
-    };
+        }, 300); // 300ms debounce delay
 
-    // Clear the input
-    const clearJson = () => {
-        setJsonInput('');
-        setJsonData(null);
-        setError(null);
-    };
+        return () => clearTimeout(debounceTimeout);
+    }, [jsonInput]);
 
     return (
         <div className={styles.page}>
             <h1 className={styles.title}>JSON Viewer</h1>
 
-            <div className={styles.inputContainer}>
-        <textarea
-            className={styles.jsonInput}
-            value={jsonInput}
-            onChange={(e) => setJsonInput(e.target.value)}
-            placeholder={`Enter your JSON here...\n\nExample:\n${exampleJson}`}
-            rows={10}
-        />
+            <div className={styles.splitLayout}>
+                <div className={styles.leftPanel}>
+                    <h2 className={styles.panelTitle}>Input JSON</h2>
+                    <div className={styles.textareaContainer}>
+            <textarea
+                className={styles.jsonInput}
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder={`Enter your JSON here...\n\nExample:\n${exampleJson}`}
+                spellCheck="false"
+            />
+                    </div>
 
-                <div className={styles.buttonGroup}>
-                    <button className={styles.button} onClick={parseJson}>
-                        Parse JSON
-                    </button>
-                    <button className={styles.button} onClick={formatJson}>
-                        Format JSON
-                    </button>
-                    <button className={styles.button} onClick={clearJson}>
-                        Clear
-                    </button>
+                    {error && (
+                        <div className={styles.error}>{error}</div>
+                    )}
+                </div>
+
+                <div className={styles.rightPanel}>
+                    <h2 className={styles.panelTitle}>JSON Viewer</h2>
+                    {jsonData ? (
+                        <div className={styles.container}>
+                            <div className={styles.jsonViewer}>
+                                <JsonView data={jsonData} initialExpanded={true} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            {error ? (
+                                <p>Please fix the JSON syntax error to visualize</p>
+                            ) : (
+                                <p>Enter valid JSON in the editor to visualize</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {error && (
-                <div className={styles.error}>{error}</div>
-            )}
-
-            {jsonData && (
-                <div className={styles.container}>
-                    <div className={styles.jsonViewer}>
-                        <JsonView data={jsonData} initialExpanded={true} />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

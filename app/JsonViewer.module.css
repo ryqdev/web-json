@@ -1,74 +1,90 @@
 /* JsonViewer.module.css */
 .page {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
 }
 
 .title {
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     color: #333;
     text-align: center;
 }
 
-.inputContainer {
-    margin-bottom: 20px;
-    width: 100%;
+.splitLayout {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 120px);
+    min-height: 500px;
+}
+
+.leftPanel, .rightPanel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.panelTitle {
+    padding: 15px;
+    margin: 0;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    font-size: 18px;
+    color: #333;
+}
+
+.textareaContainer {
+    flex: 1;
+    position: relative;
 }
 
 .jsonInput {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    height: 100%;
+    padding: 15px;
+    border: none;
+    resize: none;
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     font-size: 14px;
-    resize: vertical;
+    line-height: 1.5;
     background-color: #f9f9f9;
     color: #333;
-}
-
-.buttonGroup {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.button {
-    padding: 8px 16px;
-    background-color: #4a5568;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
-
-.button:hover {
-    background-color: #2d3748;
+    outline: none;
 }
 
 .error {
     padding: 12px;
     background-color: #fed7d7;
     color: #9b2c2c;
-    border-radius: 4px;
-    margin-bottom: 20px;
+    margin: 0;
+    border-top: 1px solid #ddd;
     font-family: sans-serif;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #f9f9f9;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
 }
 
 /* JSON Viewer Styles */
 .container {
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    flex: 1;
     padding: 20px;
     background-color: #282c34;
     color: #abb2bf;
-    border-radius: 8px;
     overflow: auto;
-    max-width: 100%;
-    margin: 20px 0;
 }
 
 .jsonViewer {
@@ -152,11 +168,12 @@
         padding: 10px;
     }
 
-    .buttonGroup {
+    .splitLayout {
         flex-direction: column;
+        height: auto;
     }
 
-    .button {
-        width: 100%;
+    .leftPanel, .rightPanel {
+        height: 400px;
     }
 }
