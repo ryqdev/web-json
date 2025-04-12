@@ -1,103 +1,137 @@
-import Image from "next/image";
+"use client";
+import { useState } from 'react';
+import styles from './JsonViewer.module.css';
+
+interface JsonViewerProps {
+    data: any;
+    initialExpanded?: boolean;
+}
+
+// JsonView component for displaying a single JSON node
+const JsonView = ({ data, initialExpanded = false }: JsonViewerProps) => {
+    const [isExpanded, setIsExpanded] = useState(initialExpanded);
+
+    const getType = (value: any): string => {
+        if (value === null) return 'null';
+        if (Array.isArray(value)) return 'array';
+        return typeof value;
+    };
+
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    const type = getType(data);
+
+    // Primitive types rendering
+    if (type === 'string') {
+        return <span className={styles.string}>"{data}"</span>;
+    }
+    if (type === 'number') {
+        return <span className={styles.number}>{data}</span>;
+    }
+    if (type === 'boolean') {
+        return <span className={styles.boolean}>{data ? 'true' : 'false'}</span>;
+    }
+    if (type === 'null') {
+        return <span className={styles.null}>null</span>;
+    }
+    if (type === 'undefined') {
+        return <span className={styles.null}>undefined</span>;
+    }
+
+    // For objects and arrays
+    const isArray = type === 'array';
+    const isEmpty = isArray ? data.length === 0 : Object.keys(data).length === 0;
+
+    return (
+        <div className={styles.jsonNode}>
+            <div className={styles.toggler} onClick={toggleExpand}>
+                <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
+                <span className={styles.bracket}>
+          {isArray ? '[' : '{'}
+        </span>
+
+                {!isExpanded && (
+                    <span className={styles.preview}>
+            {isEmpty
+                ? ''
+                : isArray
+                    ? `${data.length} ${data.length === 1 ? 'item' : 'items'}`
+                    : `${Object.keys(data).length} ${Object.keys(data).length === 1 ? 'property' : 'properties'}`
+            }
+          </span>
+                )}
+
+                {!isExpanded && <span className={styles.bracket}>{isArray ? ']' : '}'}</span>}
+            </div>
+
+            {isExpanded && (
+                <div className={styles.content}>
+                    {isEmpty ? (
+                        <span className={styles.bracket}>{isArray ? ']' : '}'}</span>
+                    ) : (
+                        <>
+                            <div className={styles.properties}>
+                                {isArray
+                                    ? data.map((item: any, index: number) => (
+                                        <div key={index} className={styles.property}>
+                                            <span className={styles.key}>{index}: </span>
+                                            <JsonView data={item} />
+                                            {index < data.length - 1 && <span className={styles.comma}>,</span>}
+                                        </div>
+                                    ))
+                                    : Object.entries(data).map(([key, value], index, array) => (
+                                        <div key={key} className={styles.property}>
+                                            <span className={styles.key}>"{key}": </span>
+                                            <JsonView data={value} />
+                                            {index < array.length - 1 && <span className={styles.comma}>,</span>}
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                            <div className={styles.closingBracket}>
+                                <span className={styles.bracket}>{isArray ? ']' : '}'}</span>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    // Example JSON data
+    const jsonData = {
+        name: "JSON Viewer",
+        version: 1.0,
+        features: ["folding", "syntax highlighting", "responsive"],
+        isAwesome: true,
+        author: {
+            name: "Developer",
+            contact: {
+                email: "dev@example.com",
+                website: "https://example.com"
+            }
+        },
+        examples: [
+            { id: 1, type: "simple" },
+            { id: 2, type: "complex", hasChildren: true },
+            null,
+            123,
+            "string value"
+        ],
+        emptyArray: [],
+        emptyObject: {}
+    };
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    return (
+        <div className={styles.container}>
+            <h1 className={styles.title}>JSON Viewer</h1>
+            <div className={styles.jsonViewer}>
+                <JsonView data={jsonData} initialExpanded={true} />
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }

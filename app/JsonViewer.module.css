@@ -1,0 +1,90 @@
+.container {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    padding: 20px;
+    background-color: #282c34;
+    color: #abb2bf;
+    border-radius: 8px;
+    overflow: auto;
+    max-width: 100%;
+    margin: 20px auto;
+}
+
+.title {
+    margin-bottom: 20px;
+    color: #e6e6e6;
+}
+
+.jsonViewer {
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.jsonNode {
+    margin-left: 4px;
+}
+
+.toggler {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.expandIcon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+    color: #56b6c2;
+}
+
+.content {
+    margin-left: 20px;
+    border-left: 1px dashed #4b5263;
+    padding-left: 10px;
+}
+
+.properties {
+    margin: 0;
+    padding: 0;
+}
+
+.property {
+    margin: 5px 0;
+}
+
+.key {
+    color: #e06c75; /* Pink */
+}
+
+.string {
+    color: #98c379; /* Green */
+}
+
+.number {
+    color: #d19a66; /* Orange */
+}
+
+.boolean {
+    color: #56b6c2; /* Cyan */
+}
+
+.null {
+    color: #c678dd; /* Purple */
+}
+
+.bracket {
+    color: #abb2bf; /* Light gray */
+}
+
+.comma {
+    color: #abb2bf; /* Light gray */
+}
+
+.preview {
+    color: #5c6370; /* Gray/comment color */
+    font-style: italic;
+    margin: 0 4px;
+}
+
+.closingBracket {
+    margin-top: 4px;
+}
